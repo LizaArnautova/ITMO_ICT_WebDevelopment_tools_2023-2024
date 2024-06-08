@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Весь код - Отчет по лабораторным работам</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u0412\u0435\u0441\u044c \u043a\u043e\u0434";
+        var mkdocs_page_input_path = "lab3/all.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Отчет по лабораторным работам
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Lab 1</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab1/body/">Body</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab1/screens/">Screens</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Lab 2</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab2/task1/">Task 1</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab2/task2/">Task 2</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Lab 3</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../task1/">Task 1</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../task2/">Task 2</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../task3/">Task 3</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Весь код</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Отчет по лабораторным работам</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Lab 3</li>
+      <li class="breadcrumb-item active">Весь код</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <p>Dockerfile</p>
+<pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt /app/requirements.txt
+
+# Install the dependencies
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Copy the rest of the working directory contents into the container
+COPY . /app
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Define the command to run the application
+CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+<p>docker-compose.yml</p>
+<pre><code>services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: recipes
+    ports:
+      - &quot;5433:5432&quot;
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:12345678@db:5432/recipes
+    ports:
+      - &quot;8080:8000&quot;
+    command: [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+
+  parser:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:12345678@db:5432/recipes
+    command: [&quot;python&quot;, &quot;parser.py&quot;]
+
+  redis:
+    image: &quot;redis:alpine&quot;
+    ports:
+      - &quot;6379:6379&quot;
+
+  worker:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:12345678@db:5432/recipes
+    command: [&quot;celery&quot;, &quot;-A&quot;, &quot;tasks.celery_app&quot;, &quot;worker&quot;, &quot;--loglevel=info&quot;]
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - &quot;5050:80&quot;
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+</code></pre>
+<p>celery_config.py</p>
+<pre><code>from celery import Celery
+
+celery_app = Celery(
+    &quot;tasks&quot;,
+    broker=&quot;redis://redis:6379/0&quot;,
+    backend=&quot;redis://redis:6379/0&quot;
+)
+
+celery_app.conf.task_routes = {
+    &quot;tasks.parse_url&quot;: {&quot;queue&quot;: &quot;parser_queue&quot;},
+}
+
+celery_app.conf.update(
+    task_serializer=&quot;json&quot;,
+    accept_content=[&quot;json&quot;],
+    result_serializer=&quot;json&quot;,
+)
+</code></pre>
+<p>tasks.py</p>
+<pre><code>from celery_config import celery_app
+from sqlalchemy.orm import Session
+from connection import SessionLocal
+from parser import parse_and_save
+
+@celery_app.task
+def parse_url_task(url: str):
+    db: Session = SessionLocal()
+    try:
+        parse_and_save(url, db)
+    finally:
+        db.close()
+</code></pre>
+<p>main.py</p>
+<pre><code>from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from connection import SessionLocal, engine
+from models import Base, Author, Title, Category
+from dtos import AuthorDTO, TitleOutputDTO, CategoryDTO, UpdateAuthorDTO, UpdateCategoryDTO, UpdateTitleDTO
+from typing import List
+from parser import parse_and_save
+from tasks import parse_url_task
+import time
+
+app = FastAPI()
+
+# Создание таблиц
+Base.metadata.create_all(bind=engine)
+
+
+# Зависимость для получения сессии базы данных
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.get(&quot;/authors/&quot;, response_model=List[AuthorDTO])
+def read_authors(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    authors = db.query(Author).offset(skip).limit(limit).all()
+    return authors
+
+
+@app.get(&quot;/authors/{author_id}&quot;, response_model=AuthorDTO)
+def read_author(author_id: int, db: Session = Depends(get_db)):
+    author = db.query(Author).filter(Author.id == author_id).first()
+    if not author:
+        raise HTTPException(status_code=404, detail=&quot;Author not found&quot;)
+    return author
+
+
+@app.get(&quot;/titles/&quot;, response_model=List[TitleOutputDTO])
+def read_titles(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    titles = db.query(Title).offset(skip).limit(limit).all()
+    return titles
+
+
+@app.get(&quot;/titles/{title_id}&quot;, response_model=TitleOutputDTO)
+def read_title(title_id: int, db: Session = Depends(get_db)):
+    title = db.query(Title).filter(Title.id == title_id).first()
+    if not title:
+        raise HTTPException(status_code=404, detail=&quot;Title not found&quot;)
+    return title
+
+
+@app.get(&quot;/categories/&quot;, response_model=List[CategoryDTO])
+def read_categories(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    categories = db.query(Category).offset(skip).limit(limit).all()
+    return categories
+
+
+@app.get(&quot;/categories/{category_id}&quot;, response_model=CategoryDTO)
+def read_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail=&quot;Category not found&quot;)
+    return category
+
+
+@app.put(&quot;/authors/{author_id}&quot;, response_model=AuthorDTO)
+def update_author(author_id: int, author_data: UpdateAuthorDTO, db: Session = Depends(get_db)):
+    author = db.query(Author).filter(Author.id == author_id).first()
+    if not author:
+        raise HTTPException(status_code=404, detail=&quot;Author not found&quot;)
+
+    for key, value in author_data.dict(exclude_unset=True).items():
+        setattr(author, key, value)
+
+    db.commit()
+    db.refresh(author)
+    return author
+
+
+@app.put(&quot;/titles/{title_id}&quot;, response_model=TitleOutputDTO)
+def update_title(title_id: int, title_data: UpdateTitleDTO, db: Session = Depends(get_db)):
+    title = db.query(Title).filter(Title.id == title_id).first()
+    if not title:
+        raise HTTPException(status_code=404, detail=&quot;Title not found&quot;)
+
+    for key, value in title_data.dict(exclude_unset=True).items():
+        if key == &quot;category_ids&quot;:
+            title.categories = db.query(Category).filter(Category.id.in_(value)).all()
+        else:
+            setattr(title, key, value)
+
+    db.commit()
+    db.refresh(title)
+    return title
+
+
+@app.put(&quot;/categories/{category_id}&quot;, response_model=CategoryDTO)
+def update_category(category_id: int, category_data: UpdateCategoryDTO, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail=&quot;Category not found&quot;)
+
+    for key, value in category_data.dict(exclude_unset=True).items():
+        setattr(category, key, value)
+
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+@app.delete(&quot;/authors/{author_id}&quot;)
+def delete_author(author_id: int, db: Session = Depends(get_db)):
+    author = db.query(Author).filter(Author.id == author_id).first()
+    if not author:
+        raise HTTPException(status_code=404, detail=&quot;Author not found&quot;)
+
+    db.delete(author)
+    db.commit()
+    return {&quot;message&quot;: &quot;Author deleted successfully&quot;}
+
+
+@app.delete(&quot;/titles/{title_id}&quot;)
+def delete_title(title_id: int, db: Session = Depends(get_db)):
+    title = db.query(Title).filter(Title.id == title_id).first()
+    if not title:
+        raise HTTPException(status_code=404, detail=&quot;Title not found&quot;)
+
+    db.delete(title)
+    db.commit()
+    return {&quot;message&quot;: &quot;Title deleted successfully&quot;}
+
+
+@app.delete(&quot;/categories/{category_id}&quot;)
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail=&quot;Category not found&quot;)
+
+    db.delete(category)
+    db.commit()
+    return {&quot;message&quot;: &quot;Category deleted successfully&quot;}
+
+
+@app.post(&quot;/parse/&quot;)
+def parse_url(url: str, db: Session = Depends(get_db)):
+    try:
+        parse_and_save(url, db)
+        return {&quot;message&quot;: &quot;Parser ran successfully&quot;}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get(&quot;/сount/&quot;)
+def count_titles(db: Session = Depends(get_db)):
+    titles = db.query(Title).all()
+    return {&quot;message&quot;: f&quot;Found {len(titles)} recipes&quot;}
+
+
+@app.post(&quot;/parse/async/&quot;)
+def parse_urls_async(urls: List[str]):
+    start_time = time.time()
+
+    task_ids = []
+    for url in urls:
+        task = parse_url_task.delay(url)
+        task_ids.append(task.id)
+
+    end_time = time.time()
+    timer = end_time - start_time
+    return {&quot;message&quot;: &quot;Parsing tasks started&quot;, &quot;task_ids&quot;: task_ids, &quot;Execution time&quot;: f&quot;{timer:.2f}&quot;}
+
+
+@app.post(&quot;/parse/naive/&quot;)
+def parse_urls_async(urls: List[str], db: Session = Depends(get_db)):
+    start_time = time.time()
+
+    for url in urls:
+        parse_and_save(url, db)
+
+    end_time = time.time()
+    timer = end_time - start_time
+    return {&quot;message&quot;: &quot;Parsing tasks started&quot;, &quot;Execution time&quot;: f&quot;{timer:.2f}&quot;}
+</code></pre>
+<p>parser.py</p>
+<pre><code>from bs4 import BeautifulSoup
+import requests
+import re
+from sqlalchemy.orm import Session
+from models import Author, Title, Category
+
+
+def parse_and_save(url: str, db: Session):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    recipe_blocks = soup.find_all('div', class_='emotion-etyz2y')
+
+    for block in recipe_blocks:
+        try:
+            title = block.find('span', class_=&quot;emotion-1bs2jj2&quot;).text
+            ingredients_text = block.find('button', class_=&quot;emotion-d6nx0p&quot;).text
+            servings_text = block.find('span', class_=&quot;emotion-tqfyce&quot;).text
+            cook_time = block.find('span', class_=&quot;emotion-14gsni6&quot;).text
+            author_block = block.find('div', class_=&quot;emotion-ah73gc&quot;)
+            author_name = author_block.find('span', class_=&quot;emotion-14tqfr&quot;).text.replace(&quot;Автор:&quot;, &quot;&quot;).strip()
+            author_link = author_block.find('a')['href']
+            author_url = f&quot;https://eda.ru{author_link}&quot;  # Создаем полный URL для автора
+            servings = int(re.search(r'\d+', servings_text).group())
+            ingredients = int(re.search(r'\d+', ingredients_text).group())
+
+            # Найти URL рецепта
+            recipe_link = block.find('a', class_=&quot;emotion-18hxz5k&quot;)
+            if recipe_link:
+                recipe_url = recipe_link['href']
+                cur_url = f&quot;https://eda.ru{recipe_url}&quot;  # Добавить базовый URL
+            else:
+                cur_url = None
+
+            # Вставить данные автора и получить его id
+            author = db.query(Author).filter_by(name=author_name).first()
+            if not author:
+                author = Author(name=author_name, author_url=author_url)
+                db.add(author)
+                db.commit()
+                db.refresh(author)
+
+            author_id = author.id
+
+            # Вставить данные рецепта с id автора
+            title_entry = Title(
+                url=url,
+                title=title,
+                ingredients=ingredients,
+                servings=servings,
+                cook_time=cook_time,
+                author_id=author_id,
+                cur_url=cur_url
+            )
+            db.add(title_entry)
+            db.commit()
+            db.refresh(title_entry)
+
+            # Парсинг и вставка категорий
+            categories_block = block.find('ul', class_='emotion-1mceoyq')
+            if categories_block:
+                categories = categories_block.find_all('li')
+                for category in categories:
+                    category_name = category.find('span', class_='emotion-1h6i17m').text
+                    category_link = category.find('a')['href']
+                    category_url = f&quot;https://eda.ru{category_link}&quot;
+
+                    # Вставить данные категории и получить ее id
+                    category_entry = db.query(Category).filter_by(name=category_name).first()
+                    if not category_entry:
+                        category_entry = Category(name=category_name, url=category_url)
+                        db.add(category_entry)
+                        db.commit()
+                        db.refresh(category_entry)
+
+                    # Вставить связь между рецептом и категорией
+                    title_entry.categories.append(category_entry)
+                    db.commit()
+
+        except AttributeError as e:
+            print(f&quot;Failed to parse block: {e}&quot;)
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../task3/" class="btn btn-neutral float-left" title="Task 3"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../task3/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

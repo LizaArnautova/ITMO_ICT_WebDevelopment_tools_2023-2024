@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Task 2 - Отчет по лабораторным работам</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Task 2";
+        var mkdocs_page_input_path = "lab3/task2.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Отчет по лабораторным работам
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Lab 1</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab1/body/">Body</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab1/screens/">Screens</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Lab 2</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab2/task1/">Task 1</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../lab2/task2/">Task 2</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Lab 3</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../task1/">Task 1</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Task 2</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../task3/">Task 3</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../all/">Весь код</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Отчет по лабораторным работам</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Lab 3</li>
+      <li class="breadcrumb-item active">Task 2</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <p><strong>Подзадача 2: Вызов парсера из FastAPI</strong>
+- Эндпоинт в FastAPI для вызова парсера:
+Необходимо добавить в FastAPI приложение ендпоинт, который будет принимать запросы с URL для парсинга от клиента, отправлять запрос парсеру (запущенному в отдельном контейнере) и возвращать ответ с результатом клиенту.</p>
+<p><strong>Зачем:</strong> Это позволит интегрировать функциональность парсера в ваше веб-приложение, предоставляя возможность пользователям запускать парсинг через API.</p>
+<hr>
+<hr>
+
+<p>Парсер выведен в отдельный файл <strong>parser.py</strong> и, закономерно, прописан без использования sql уже.</p>
+<pre><code>from bs4 import BeautifulSoup
+import requests
+import re
+from sqlalchemy.orm import Session
+from models import Author, Title, Category
+
+
+def parse_and_save(url: str, db: Session):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    recipe_blocks = soup.find_all('div', class_='emotion-etyz2y')
+
+    for block in recipe_blocks:
+        try:
+            title = block.find('span', class_=&quot;emotion-1bs2jj2&quot;).text
+            ingredients_text = block.find('button', class_=&quot;emotion-d6nx0p&quot;).text
+            servings_text = block.find('span', class_=&quot;emotion-tqfyce&quot;).text
+            cook_time = block.find('span', class_=&quot;emotion-14gsni6&quot;).text
+            author_block = block.find('div', class_=&quot;emotion-ah73gc&quot;)
+            author_name = author_block.find('span', class_=&quot;emotion-14tqfr&quot;).text.replace(&quot;Автор:&quot;, &quot;&quot;).strip()
+            author_link = author_block.find('a')['href']
+            author_url = f&quot;https://eda.ru{author_link}&quot;  # Создаем полный URL для автора
+            servings = int(re.search(r'\d+', servings_text).group())
+            ingredients = int(re.search(r'\d+', ingredients_text).group())
+
+            # Найти URL рецепта
+            recipe_link = block.find('a', class_=&quot;emotion-18hxz5k&quot;)
+            if recipe_link:
+                recipe_url = recipe_link['href']
+                cur_url = f&quot;https://eda.ru{recipe_url}&quot;  # Добавить базовый URL
+            else:
+                cur_url = None
+
+            # Вставить данные автора и получить его id
+            author = db.query(Author).filter_by(name=author_name).first()
+            if not author:
+                author = Author(name=author_name, author_url=author_url)
+                db.add(author)
+                db.commit()
+                db.refresh(author)
+
+            author_id = author.id
+
+            # Вставить данные рецепта с id автора
+            title_entry = Title(
+                url=url,
+                title=title,
+                ingredients=ingredients,
+                servings=servings,
+                cook_time=cook_time,
+                author_id=author_id,
+                cur_url=cur_url
+            )
+            db.add(title_entry)
+            db.commit()
+            db.refresh(title_entry)
+
+            # Парсинг и вставка категорий
+            categories_block = block.find('ul', class_='emotion-1mceoyq')
+            if categories_block:
+                categories = categories_block.find_all('li')
+                for category in categories:
+                    category_name = category.find('span', class_='emotion-1h6i17m').text
+                    category_link = category.find('a')['href']
+                    category_url = f&quot;https://eda.ru{category_link}&quot;
+
+                    # Вставить данные категории и получить ее id
+                    category_entry = db.query(Category).filter_by(name=category_name).first()
+                    if not category_entry:
+                        category_entry = Category(name=category_name, url=category_url)
+                        db.add(category_entry)
+                        db.commit()
+                        db.refresh(category_entry)
+
+                    # Вставить связь между рецептом и категорией
+                    title_entry.categories.append(category_entry)
+                    db.commit()
+
+        except AttributeError as e:
+            print(f&quot;Failed to parse block: {e}&quot;)
+</code></pre>
+<p>В <strong>main.py</strong> добавлен следующий путь:</p>
+<pre><code>@app.post(&quot;/parse/&quot;)
+def parse_url(url: str, db: Session = Depends(get_db)):
+    try:
+        parse_and_save(url, db)
+        return {&quot;message&quot;: &quot;Parser ran successfully&quot;}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+</code></pre>
+<p>Где-то здесь для оценки происходящего (и того, что все действительно работает) сначала в main.py появился следующий путь</p>
+<pre><code>@app.get(&quot;/сount/&quot;)
+def count_titles(db: Session = Depends(get_db)):
+    titles = db.query(Title).all()
+    return {&quot;message&quot;: f&quot;Found {len(titles)} recipes&quot;}
+</code></pre>
+<p>Чтобы убеждаться, что количество строк увеличилось =&gt; парсер действительно отработал. </p>
+<p>А потом мне стало интересно подглядывать, что вообще собирается, и потому добавила возможность открывать pgAdmin. Для этого в docker-compose.yml добавлено следующее:</p>
+<pre><code>  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - &quot;5050:80&quot;
+    depends_on:
+      - db
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../task1/" class="btn btn-neutral float-left" title="Task 1"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../task3/" class="btn btn-neutral float-right" title="Task 3">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../task1/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../task3/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
